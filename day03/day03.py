@@ -24,4 +24,4 @@ with open(sys.argv[1], 'r') as df:
     epsilon_bits = [ (2 + ~x) for x in gamma_bits ]
     gamma = int("".join([str(x) for x in gamma_bits]), 2)
     epsilon = int("".join([str(x) for x in epsilon_bits]), 2)
-    print(f"gamma: {gamma}\nepsilon: {epsilon}\power consumption: {gamma * epsilon}")
+    print(f"gamma: {gamma}\nepsilon: {epsilon}\npower consumption: {gamma * epsilon}")
