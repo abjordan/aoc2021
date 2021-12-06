@@ -16,21 +16,17 @@ board = np.zeros((1000,1000))
 
 with open(sys.argv[1], 'r') as inf:
     for line in inf.readlines():
-        x1, y1, x2, y2 = [ int(x) for x in parser.match(line.strip()).groups() ]        
-        points = None
+        x1, y1, x2, y2 = [int(x) for x in parser.match(line.strip()).groups()]
 
         x_step = 1 if x2 > x1 else -1
         y_step = 1 if y2 > y1 else -1
 
-        # This could be refactored to make it DRY-er, but I think it's easier
-        # to understand what's going on if the steps are a little more explicit
-        if (x1 == x2):
-            points = zip_longest([x1], range(y1, y2+y_step, y_step), fillvalue=x1)
-        elif (y1 == y2):
-            points = zip_longest(range(x1, x2+x_step, x_step), [y1], fillvalue=y1)
-        else:
-            points = zip(range(x1, x2+x_step, x_step), range(y1, y2+y_step, y_step))
-    
+        # I couldn't help myself
+        points = zip_longest(
+            range(x1, x2+x_step, x_step),
+            range(y1, y2+y_step, y_step),
+            fillvalue=x1 if x1 == x2 else y1)
+
         for point in points:
             board[point] = board[point] + 1
 
