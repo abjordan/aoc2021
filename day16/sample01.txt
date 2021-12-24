@@ -1,0 +1,10 @@
+38006F45291200
+
+00111000000000000110111101000101001010010001001000000000
+VVVTTTILLLLLLLLLLLLLLLAAAAAAAAAAABBBBBBBBBBBBBBBB
+The three bits labeled V (001) are the packet version, 1.
+The three bits labeled T (110) are the packet type ID, 6, which means the packet is an operator.
+The bit labeled I (0) is the length type ID, which indicates that the length is a 15-bit number representing the number of bits in the sub-packets.
+The 15 bits labeled L (000000000011011) contain the length of the sub-packets in bits, 27.
+The 11 bits labeled A contain the first sub-packet, a literal value representing the number 10.
+The 16 bits labeled B contain the second sub-packet, a literal value representing the number 20.

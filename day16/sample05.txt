@@ -1,0 +1,7 @@
+C0015000016115A2E0802F182340
+
+VS is 23
+
+C0015000016115A2E0802F182340 has the same structure as 
+the previous example, but the outermost packet uses a 
+different length type ID. This packet has a version sum of 23.

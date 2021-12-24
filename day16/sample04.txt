@@ -1,0 +1,6 @@
+620080001611562C8802118E34
+
+620080001611562C8802118E34 represents an operator packet 
+(version 3) which contains two sub-packets; each sub-packet 
+is an operator packet that contains two literal values. 
+This packet has a version sum of 12.
