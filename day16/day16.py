@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from enum import Enum
+from functools import reduce
+from operator import mul
 import sys
 
 bits_from_hex = {
@@ -23,9 +25,14 @@ bits_from_hex = {
 }
 
 class PktType(Enum):
-    UNKNOWN = 0
+    SUM = 0
+    PRODUCT = 1
+    MINIMUM = 2
+    MAXIMUM = 3
     LITERAL = 4
-    OPERATOR = 2
+    GREATERTHAN = 5
+    LESSTHAN = 6
+    EQUAL = 7
 
 class Packet:
     def __init__(self, version, pkt_type):
@@ -33,7 +40,7 @@ class Packet:
         self.sub_pkts = []
         self.bit_count = 6
         self.version = version
-        self.kind = PktType.LITERAL if pkt_type == 4 else PktType.OPERATOR
+        self.kind = PktType(pkt_type)
 
     def __str__(self) -> str:
         ret = f'VER:{self.version} KIND:{self.kind}'
@@ -54,6 +61,26 @@ class Packet:
 
     def version_sum(self):
         return self.version + sum([x.version_sum() for x in self.sub_pkts])
+
+    def evaluate(self):
+        if self.kind == PktType.LITERAL:
+            return self.literal
+        elif self.kind == PktType.SUM:
+            return sum([x.evaluate() for x in self.sub_pkts])
+        elif self.kind == PktType.PRODUCT:
+            return reduce(mul, [x.evaluate() for x in self.sub_pkts], 1)
+        elif self.kind == PktType.MINIMUM:
+            return min([x.evaluate() for x in self.sub_pkts])
+        elif self.kind == PktType.MAXIMUM:
+            return max([x.evaluate() for x in self.sub_pkts])
+        elif self.kind == PktType.GREATERTHAN:
+            return 1 if self.sub_pkts[0].evaluate() > self.sub_pkts[1].evaluate() else 0
+        elif self.kind == PktType.LESSTHAN:
+            return 1 if self.sub_pkts[0].evaluate() < self.sub_pkts[1].evaluate() else 0
+        elif self.kind == PktType.EQUAL:
+            return 1 if self.sub_pkts[0].evaluate() == self.sub_pkts[1].evaluate() else 0
+        else:
+            raise RuntimeError("Invalid operator: " + str(self.kind))
 
 def read_int(raw_bits, bit_len):
     num = int(raw_bits[0:bit_len], 2)
@@ -118,22 +145,35 @@ def read_packet(raw_bits):
     return pkt, raw_bits
 
 
-hex_data = open(sys.argv[1], 'r').readline().strip()
+if __name__=='__main__':
+    hex_data = [x.strip() for x in open(sys.argv[1], 'r').readlines()]
 
-offset = 0
-raw_bits = ''
-for ch in hex_data:
-    try:
-        raw_bits += bits_from_hex[ch]
-        offset += 1
-    except KeyError as ke:
-        print(f'BAD CHAR AT {offset}: {ch}')
+    # Reverse it so we can use pop without having to import deque
+    hex_data = list(reversed(hex_data))
 
-# print('0b' + raw_bits)
+    line = hex_data.pop()
+    while line != '':
+        if line.startswith('#'):
+            continue
+        
+        print(line)
+        offset = 0
+        raw_bits = ''
+        for ch in line:
+            try:
+                raw_bits += bits_from_hex[ch]
+                offset += 1
+            except KeyError as ke:
+                print(f'BAD CHAR AT {offset}: {ch}')
 
-pkt, raw_bits = read_packet(raw_bits)
+        # print('0b' + raw_bits)
+        pkt, raw_bits = read_packet(raw_bits)
+        #print(pkt.pretty())
+        version_sum = pkt.version_sum()
+        print(f'    Version sum: {version_sum}')
+        result = pkt.evaluate()
+        print(f'    Packet evaluation result: {result}')
 
-#print(pkt.pretty())
-
-version_sum = pkt.version_sum()
-print(f'Version sum: {version_sum}')
+        if len(hex_data) == 0:
+            break
+        line = hex_data.pop()
