@@ -9,6 +9,13 @@ class Result(Enum):
     MISS = 3
     TIMEOUT = 4
 
+RESULT_MAP = {
+    Result.OK: "o",
+    Result.HIT: "+",
+    Result.MISS: "-",
+    Result.TIMEOUT: "T"
+}
+
 def update(state):
     x, y, dx, dy = state
     x_1 = x + dx
@@ -24,7 +31,7 @@ def update(state):
 def check(state, target):
     x, y, _, _ = state
     (tx_min, tx_max), (ty_min, ty_max) = target
-    if (x in range(tx_min, tx_max)) and (y in range(ty_min, ty_max)):
+    if (x in range(tx_min, tx_max+1)) and (y in range(ty_min, ty_max+1)):
         return Result.HIT
     elif not ((state[0] <= target[0][1]) and (state[1] >= target[1][0])):
         return Result.MISS
@@ -72,19 +79,39 @@ if __name__=='__main__':
     max_max = 0
     argmax = (0,0)
 
+    hits = []
+
     timeouts = 0
-    for dx in range(0, 100):
-        for dy in range(0, 100):
+    # Can't be negative, since we'll never get there, and it can't be
+    # bigger than the upper end of the range, since we'd overshoot on the
+    # first step.
+    for dx in range(0, max(target_x)+1):
+        # Can't be more negative than the lower end of the y target range,
+        # since we'd overshoot on the first step.
+        print(f'{dx}:', end='')
+        hitting = False
+        for dy in range(min(target_y)-1, 200):
             state = (0, 0, dx, dy)
             #print(f"Velocity: {(dx, dy)}: ", end="")
             result, max_height = simulate(state, target)
-            if result == Result.HIT and max_height >= max_max:
-                max_max = max(max_height, max_max)
-                argmax = (dx, dy)
+            print(f"{RESULT_MAP[result]}", end='')
+            if result == Result.HIT:
+                hitting = True
+                hits.append((dx, dy))
+                if max_height >= max_max:
+                    max_max = max(max_height, max_max)
+                    argmax = (dx, dy)
+            #elif result == Result.MISS:
+            #    if hitting is True:
+            #        # Can stop, since we'll never go from hitting to missing back to hitting
+            #        break
             elif result == Result.TIMEOUT:
                 timeouts += 1
                 print('T', end='')
-                sys.stdout.flush()
+        print('')
+        sys.stdout.flush()
     print(f"Maximum height: {max_max} with initial vel. {argmax}")
     print(f"Had {timeouts} timeouts")
+    print(f"Found {len(hits)} unique initial vectors that get you to the target")
+    print(hits)
     
