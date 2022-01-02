@@ -7,6 +7,7 @@ class Result(Enum):
     OK = 1
     HIT = 2
     MISS = 3
+    TIMEOUT = 4
 
 def update(state):
     x, y, dx, dy = state
@@ -30,12 +31,9 @@ def check(state, target):
     else:
         return Result.OK
 
-if __name__=='__main__':    
-    target_x = (20, 30)
-    target_y = (-10, -5)
-    target = (target_x, target_y)
+def simulate(state, target):
 
-    state = (0, 0, 17, -4)
+    max_height = state[1]
 
     # We know we missed if the current position is past the target area in 
     # either dimension - dx can't go negative, and dy can't become positive 
@@ -44,20 +42,49 @@ if __name__=='__main__':
     result = Result.OK
     while result == Result.OK:
         state = update(state)
+        max_height = max(state[1], max_height)
+
         tick += 1
-        print('Tick: {0:03d}: {1}'.format(tick, state))
+        #print('Tick: {0:03d}: {1}'.format(tick, state))
         result = check(state, target)
         if result == Result.MISS:
-            print(f"MISS: {state}, {target}")
+            #print(f"MISS: {max_height} : {state}, {target}")
             break
         elif result == Result.HIT:
-            print(f"HIT : {state}, {target}")
+            #print(f"HIT : {max_height} : {state}, {target}")
             break
         else:
             # keep going
             pass
-        if tick > 10:
-            print('???')
+        if tick > 10000:
+            result = Result.TIMEOUT
             break
+    return result, max_height
 
+if __name__=='__main__':    
+    #target_x = (20, 30)
+    #target_y = (-10, -5)
+
+    target_x = (195,238)
+    target_y = (-93,-67)
+    target = (target_x, target_y)
+
+    max_max = 0
+    argmax = (0,0)
+
+    timeouts = 0
+    for dx in range(0, 100):
+        for dy in range(0, 100):
+            state = (0, 0, dx, dy)
+            #print(f"Velocity: {(dx, dy)}: ", end="")
+            result, max_height = simulate(state, target)
+            if result == Result.HIT and max_height >= max_max:
+                max_max = max(max_height, max_max)
+                argmax = (dx, dy)
+            elif result == Result.TIMEOUT:
+                timeouts += 1
+                print('T', end='')
+                sys.stdout.flush()
+    print(f"Maximum height: {max_max} with initial vel. {argmax}")
+    print(f"Had {timeouts} timeouts")
     
